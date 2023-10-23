@@ -30,7 +30,7 @@ object Snap extends IOApp.Simple {
       //Prompt for replay
       _ <- IO.println("Play again? (true/false)...")
       playAgain <- boolInput()
-      _ <- if (playAgain) run() else IO.unit
+      _ <- if (playAgain) run() else IO.println("Thanks for playing!")
     } yield ()
 
   }
