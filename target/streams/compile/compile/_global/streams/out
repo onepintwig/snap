@@ -1,0 +1,7 @@
+[0m[[0m[33mwarn[0m] [0m[0m/Users/williamneedham/Repos/snap/src/main/scala/io/onepintwig/snap/Snap.scala:14:7: method with a single empty parameter list overrides method run in trait Simple defined without a parameter list [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  def run(): IO[Unit] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/Users/williamneedham/Repos/snap/src/main/scala/io/onepintwig/snap/Snap.scala:74:11: a pure expression does nothing in statement position[0m
+[0m[[0m[33mwarn[0m] [0m[0m  } yield updatedGameState[0m
+[0m[[0m[33mwarn[0m] [0m[0m          ^[0m
+[0m[[0m[33mwarn[0m] [0m[0mtwo warnings found[0m
