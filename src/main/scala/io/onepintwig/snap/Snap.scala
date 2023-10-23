@@ -71,7 +71,7 @@ object Snap extends IOApp.Simple {
         case api.PlayerTwo => playRound(updatedGameStateWithScores, PlayerOne, timeBetweenGoes)
       }
     }
-  } yield updatedGameState
+  } yield ()
 
   /***** PLAYER INPUTS *****/
   //TODO: Error handling API for better input validation and feedback to players
