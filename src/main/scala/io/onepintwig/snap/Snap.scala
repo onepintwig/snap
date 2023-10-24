@@ -46,6 +46,7 @@ object Snap extends IOApp.Simple {
     _ <- IO.sleep(timeBetweenGoes)
     //End of turn scoring logic
     updatedGameStateWithScores <- if(updatedGameState.checkSnap) {
+      //TODO: Button press for snap? Detect which player hits first - punish mishit
       IO.println("Snap detected. Which player called first? (1/2)") *> intInput(1, 2).map {
         case 1 => updatedGameState.updateWinner(PlayerOne)
         case 2 => updatedGameState.updateWinner(PlayerTwo)
@@ -76,6 +77,7 @@ object Snap extends IOApp.Simple {
   /***** PLAYER INPUTS *****/
   //TODO: Error handling API for better input validation and feedback to players
 
+  //TODO: Different go button for each player
   private def playerGoInput(player: Player): IO[Unit] =
     IO.println(s"$player go! Press Enter/Return to reveal a card!") *> IO.readLine *> IO.unit
 
@@ -95,6 +97,7 @@ object Snap extends IOApp.Simple {
 
   /***** GAME RENDERING *****/
   //TODO: Add render method to [[Game]] to make this a bit prettier
+  //TODO: Seperate rendering into own class
 
   private def renderGame(game: Game): IO[Unit] = {
     IO.println("----------------------------------") *>
