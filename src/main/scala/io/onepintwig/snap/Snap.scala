@@ -26,6 +26,7 @@ object Snap extends IOApp.Simple {
       //Initialise game state based off defined parameters
       game = Game.init(decks, matchOnSuit, matchOnValue)
       //Play game
+      //TODO: Random player for first turn
       _ <- playRound(game, PlayerOne, secondsBetweenGoes.seconds)
       //Prompt for replay
       _ <- IO.println("Play again? (true/false)...")
@@ -66,11 +67,12 @@ object Snap extends IOApp.Simple {
         IO.println(s"$winner wins! Congratulations!!")
       }
   } else {
-      //Play again with other player
-      player match {
-        case api.PlayerOne => playRound(updatedGameStateWithScores, PlayerTwo, timeBetweenGoes)
-        case api.PlayerTwo => playRound(updatedGameStateWithScores, PlayerOne, timeBetweenGoes)
+      //Other player draws a card
+      val nextPlayersTurn = player match {
+        case api.PlayerOne => PlayerTwo
+        case api.PlayerTwo => PlayerOne
       }
+      playRound(updatedGameStateWithScores, nextPlayersTurn, timeBetweenGoes)
     }
   } yield ()
 
