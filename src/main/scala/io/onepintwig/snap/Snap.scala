@@ -6,7 +6,8 @@ import io.onepintwig.snap.api._
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 /**
- * The main runner for the game. Defines game logic, but does not hold game state - which is held entirely within [[Game]]
+ * The main runner for the game.
+ * Defines game logic, but does not hold game state - which is held entirely within [[Game]]
  */
 object Snap extends IOApp.Simple {
 
@@ -14,45 +15,43 @@ object Snap extends IOApp.Simple {
   def run(): IO[Unit] = {
     for {
       //Inputs for game
-      _ <- IO.println("Number of decks (min 1, max 100)...")
-      decks <- intInput(1, 100)
-      _ <- IO.println("Match on suit (true/false)...")
-      matchOnSuit <- boolInput()
-      _ <- IO.println("Match on value (true/false)...")
-      matchOnValue <- boolInput()
+      decks <- GameInputs.intInput("Number of decks", 1, 100)
+      matchOnSuit <- GameInputs.boolInput("Match on suit")
+      matchOnValue <-GameInputs. boolInput("Match on value")
       //Optional additional param, to give the players time to call snap
-      _ <- IO.println("Sleep between goes in seconds (min 0, max 10)...")
-      secondsBetweenGoes <- intInput(0, 5)
+      secondsBetweenGoes <- GameInputs.intInput("Sleep between goes in seconds", 0, 5)
       //Initialise game state based off defined parameters
       game = Game.init(decks, matchOnSuit, matchOnValue)
       //Play game
       //TODO: Random player for first turn
       _ <- playRound(game, PlayerOne, secondsBetweenGoes.seconds)
       //Prompt for replay
-      _ <- IO.println("Play again? (true/false)...")
-      playAgain <- boolInput()
+      playAgain <- GameInputs.boolInput("Play again?")
       _ <- if (playAgain) run() else IO.println("Thanks for playing!")
     } yield ()
 
   }
 
   //Logic for playing a round of snap
+  //Recursively plays a round until all cards are played
   private def playRound(game: Game, player: Player, timeBetweenGoes: FiniteDuration): IO[Unit] = for {
     //Prompt for player to "turn" card
-    _ <- playerGoInput(player)
+    _ <- GameInputs.playerGoInput(player)
     //Update game state after card draw
     updatedGameState = game.drawCard(player)
-    //Render board to players
-    _ <- renderGame(updatedGameState)
+    //Render updated board to players
+    _ <- GameRenderer.renderGame(updatedGameState)
     _ <- IO.sleep(timeBetweenGoes)
     //End of turn scoring logic
     updatedGameStateWithScores <- if(updatedGameState.checkSnap) {
       //TODO: Button press for snap? Detect which player hits first - punish mishit
-      IO.println("Snap detected. Which player called first? (1/2)") *> intInput(1, 2).map {
+      GameInputs.intInput("Snap detected. Which player called first?", 1, 2).map {
         case 1 => updatedGameState.updateWinner(PlayerOne)
         case 2 => updatedGameState.updateWinner(PlayerTwo)
       }.flatMap(
-        scores => IO.println("Scores updated!") *> renderGame(scores) *> IO.pure(scores)
+        game =>
+          //Render game board so players can see scores
+          IO.println("Scores updated!") *> GameRenderer.renderGame(game) *> IO.pure(game)
       )
     } else IO.pure(updatedGameState)
     //End game if remaining cards are empty, else play again for the other player
@@ -75,41 +74,5 @@ object Snap extends IOApp.Simple {
       playRound(updatedGameStateWithScores, nextPlayersTurn, timeBetweenGoes)
     }
   } yield ()
-
-  /***** PLAYER INPUTS *****/
-  //TODO: Error handling API for better input validation and feedback to players
-
-  //TODO: Different go button for each player
-  private def playerGoInput(player: Player): IO[Unit] =
-    IO.println(s"$player go! Press Enter/Return to reveal a card!") *> IO.readLine *> IO.unit
-
-  private def boolInput(): IO[Boolean] = IO.readLine.map(_.toBoolean).handleErrorWith {
-    case err: IllegalArgumentException => IO.println(s"Bad input! $err. Try again...") *> boolInput()
-    case err => IO.raiseError(err)
-  }
-
-  private def intInput(min: Int, max: Int): IO[Int] = IO.readLine.map(_.toInt).flatMap {
-    case int if (max < int) || (int < min) =>
-      IO.raiseError(new IllegalArgumentException(s"Integer must be min $min and max $max"))
-    case int => IO.pure(int)
-  }.handleErrorWith {
-    case err: IllegalArgumentException => IO.println(s"Bad input! $err. Try again...") *> intInput(min, max)
-    case err => IO.raiseError(err)
-  }
-
-  /***** GAME RENDERING *****/
-  //TODO: Add render method to [[Game]] to make this a bit prettier
-  //TODO: Seperate rendering into own class
-
-  private def renderGame(game: Game): IO[Unit] = {
-    IO.println("----------------------------------") *>
-    IO.println(
-      s"Player1 Score: ${game.player1Score} " +
-        s"Player2 Score: ${game.player2Score}"
-    ) *> IO.println(
-      s"Player1 Stack Top\n${game.player1Stack.lastOption.map(_.render).getOrElse("Empty")} \n" +
-        s"Player2 Stack Top\n${game.player2Stack.lastOption.map(_.render).getOrElse("Empty")}"
-    ) *> IO.println("----------------------------------")
-  }
 
 }
