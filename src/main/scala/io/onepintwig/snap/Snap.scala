@@ -23,8 +23,12 @@ object Snap extends IOApp.Simple {
       //Initialise game state based off defined parameters
       game = Game.init(decks, matchOnSuit, matchOnValue)
       //Play game
-      //TODO: Random player for first turn
-      _ <- playRound(game, PlayerOne, secondsBetweenGoes.seconds)
+      players = Set(PlayerOne, PlayerTwo) //Set in case we end up adding more players in the future
+      _ <- playRound(
+        game,
+        players.iterator.drop(util.Random.nextInt(players.size)).next, //Random player starts
+        secondsBetweenGoes.seconds
+      )
       //Prompt for replay
       playAgain <- GameInputs.boolInput("Play again?")
       _ <- if (playAgain) run() else IO.println("Thanks for playing!")
